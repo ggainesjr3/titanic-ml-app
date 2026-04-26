@@ -11,7 +11,8 @@ from preprocessing import run_full_preprocessing
 # Set page config
 st.set_page_config(page_title="Titanic Tactical Survival Monitor", layout="centered")
 
-st.title("🚢 Titanic Tactical Survival Monitor")
+# V2.1 Safety Update Title
+st.title("🚢 Titanic Tactical Survival Monitor (V2.1 - Safety Update)")
 st.markdown("---")
 
 # Load the saved model
@@ -49,10 +50,13 @@ df_final = df_processed.reindex(columns=model_features, fill_value=0)
 prediction = model.predict(df_final)[0]
 probability = model.predict_proba(df_final)[0][1]
 
-# --- THE BRUTALIST GUARDRAIL ---
-# Applying human logic for outliers over age 85
-if age >= 85:
-    probability = probability * 0.5  # Slash the probability by half
+# --- THE BRUTALIST GUARDRAIL (V2.1) ---
+# Hard override for extreme age outliers
+if age >= 90:
+    probability = min(probability, 0.25) # Hard cap at 25%
+    prediction = 0 # Force Perished
+elif age >= 85:
+    probability = probability * 0.5
     if probability < 0.5:
         prediction = 0
 
@@ -68,14 +72,13 @@ with col1:
 
 with col2:
     st.subheader("Survival Chance")
-    # Display the adjusted probability
     st.metric(label="Probability", value=f"{probability:.2%}")
 
 st.progress(probability)
 
 # Warning for transparency
 if age > 80:
-    st.warning(f"⚠️ **Reality Check:** Historical records show the oldest survivor was 80. Probability for this {age}-year-old has been adjusted via safety guardrails.")
+    st.warning(f"⚠️ **Safety Override Active:** No historical data exists for passengers over 80. Survival probability has been manually throttled for realism.")
 
 st.markdown("---")
-st.info("Technical Note: Post-processing guardrails applied to handle extreme age outliers.")
+st.info("Technical Note: V2.1 Guardrails applied to manage out-of-distribution age data.")
