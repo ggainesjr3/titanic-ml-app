@@ -1,62 +1,56 @@
 import pandas as pd
-import numpy as np
-import sys
-import os
 import joblib
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
+from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.metrics import classification_report, accuracy_score
-
-# Ensure local imports work
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from preprocessing import run_full_preprocessing
 
-def train():
-    path = 'data/train.csv'
-    if not os.path.exists(path):
-        print(f"Error: {path} not found.")
-        return
+# 1. Load Data
+try:
+    df = pd.read_csv('data/titanic.csv')
+except FileNotFoundError:
+    print("❌ Error: data/titanic.csv not found.")
+    exit()
 
-    print("--- Loading & Processing ---")
-    df = pd.read_csv(path)
-    df_processed = run_full_preprocessing(df)
-    
-    target = 'survived'
-    X = df_processed.drop(columns=[target])
-    y = df_processed[target]
+# 2. Separate Target and Preprocess
+y = df['Survived']
+X_raw = df.drop(columns=['Survived']) 
+X = run_full_preprocessing(X_raw)
 
-    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+# Ensure no target leakage
+X.columns = [c.lower() for c in X.columns]
+if 'survived' in X.columns:
+    X = X.drop(columns=['survived'])
 
-    # Tuning Grid
-    param_grid = {
-        'n_estimators': [50, 100, 200],
-        'max_depth': [5, 7, 10, None],
-        'min_samples_split': [2, 5]
-    }
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    print("--- Running Grid Search ---")
-    rf = RandomForestClassifier(random_state=42)
-    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1)
-    grid_search.fit(X_train, y_train)
+# 3. XGBoost Hyperparameter Tuning
+param_grid = {
+    'n_estimators': [100, 200],
+    'max_depth': [3, 5],
+    'learning_rate': [0.05, 0.1],
+    'subsample': [0.8, 1.0]
+}
 
-    best_model = grid_search.best_estimator_
+xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42)
+grid_search = GridSearchCV(estimator=xgb, param_grid=param_grid, cv=5, n_jobs=-1, scoring='accuracy')
 
-    # EVALUATE
-    y_pred = best_model.predict(X_val)
-    print(f"\nBest Params: {grid_search.best_params_}")
-    print(f"Accuracy: {accuracy_score(y_val, y_pred):.4f}")
-    print("\nReport:\n", classification_report(y_val, y_pred))
+print("🚀 Training Optimized XGBoost Model...")
+grid_search.fit(X_train, y_train)
 
-    # --- TACTICAL FEATURE IMPORTANCE ---
-    importances = best_model.feature_importances_
-    indices = np.argsort(importances)[::-1]
+best_model = grid_search.best_estimator_
+y_pred = best_model.predict(X_test)
 
-    print("\n--- Tactical Feature Importance ---")
-    for f in range(X.shape[1]):
-        print(f"{f + 1}. {X.columns[indices[f]]}: {importances[indices[f]]:.4f}")
+# 4. Evaluation
+acc = accuracy_score(y_test, y_pred)
+print(f"✅ Training Complete. Accuracy: {acc:.4f}")
 
-    joblib.dump(best_model, 'titanic_model.pkl')
-    print("\nSuccess: Tuned model and importance metrics ready.")
+# 5. Feature Importance Audit (Check for 'snitches')
+importances = pd.Series(best_model.feature_importances_, index=X.columns)
+print("\n--- Top 5 Predictive Features ---")
+print(importances.sort_values(ascending=False).head(5))
 
-if __name__ == "__main__":
-    train()
+# 6. Save Model
+# XGBoost stores feature names internally if X is a DataFrame
+joblib.dump(best_model, 'titanic_model.pkl')
+print("\n📦 Model saved to titanic_model.pkl")
