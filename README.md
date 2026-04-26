@@ -1,25 +1,54 @@
-# Titanic Survival Predictor: Defensive ML Pipeline
+# 📂 SYSTEM_ARCH: TITANIC_TACTICAL_MONITOR_V3
+# STATUS: [DEPLOYED] | ACCURACY: [82.14%] | ENVIRONMENT: [ROSENCRANTZ]
+# DEVELOPER: GARY EDWARD GAINES, JR.
 
-A high-performance Random Forest pipeline built with defensive engineering principles. This project achieves **79% Accuracy** on the Titanic dataset using automated feature engineering and hyperparameter tuning.
+---
 
-## 🏗 Project Structure
-- `data/`: Raw dataset storage.
-- `src/preprocessing.py`: Modular cleaning, title extraction, and categorical encoding.
-- `src/train_model.py`: Automated GridSearch tuning and feature importance analysis.
-- `src/predict.py`: Inference script for real-time survival probability.
-- `titanic_model.pkl`: Serialized production-ready model.
+## 🛠 TACTICAL OVERVIEW
+A high-density survival prediction engine built with **XGBoost**. This system moves beyond baseline modeling by implementing **Defensive Engineering** patterns and **Out-of-Distribution (OOD)** guardrails.
 
-## 🛠 Features & Engineering
-- **Defensive Pathing:** Scripts are casing-agnostic and handle dynamic directory resolution.
-- **Title Extraction:** Engineered social status from passenger names to impute missing age data.
-- **Tuned Random Forest:** Optimized via 5-fold cross-validation.
+### 🧠 REFINED LOGIC (THE MATH)
+To achieve >82% accuracy, the model logic was re-engineered to balance social and physical variables:
+* **[LOG_SCALING]:** Wealth (Fare) was normalized using Log-scaling to prevent $500 outliers from hijacking the gradient.
+* **[DECAY_PROTOCOL]:** Implemented Exponential Decay for Age > 80. Survival probability evaporates as data becomes scarce, preventing "cliff" errors.
+* **[INTERACTION_LOGIC]:** Linked Pclass and Age to create a "Senior Class Penalty," reflecting historical casualty patterns.
 
-## 🚀 Usage
-1. Install dependencies: \`pip install -r requirements.txt\`
-2. Train the model: \`python src/train_model.py\`
-3. Run a prediction: \`python src/predict.py\`
+### 🛡 DEFENSIVE PATTERNS
+Built for the "Dirty Data" of a busy shift:
+1.  **LEAKAGE_PURGE:** Explicitly stripped Ticket and Cabin fragments to prevent the model from "memorizing" individuals.
+2.  **INPUT_SANITIZATION:** Automatic normalization of titles and strings (Mr, mR, MR -> Mr).
+3.  **STOCHASTIC_TUNING:** Utilized 5-fold GridSearchCV to optimize XGBoost hyperparameters without overfitting.
 
-## 📊 Feature Importance
-1. Sex/Title (Mr) ~40%
-2. Fare (Class) ~17%
-3. Age ~15%
+---
+
+## 🚀 DEPLOYMENT_LOGS
+
+### INSTALL_DEPENDS
+```bash
+pip install xgboost pandas streamlit scikit-learn joblib
+
+EXECUTE_TRAIN
+Bash
+
+# Calibrates XGBoost and generates titanic_model.pkl
+python3 src/train_model.py
+
+START_INTERFACE
+Bash
+
+# Launches the tactical dashboard
+streamlit run src/app.py
+
+🎙 PHILOSOPHY
+
+    "In a bar or a codebase, you don't trust the data at face value. You build for the exceptions, not the rules. This project is a Digital Bouncer designed to handle outliers with precision."
+
+👤 DEVELOPER_INFO
+
+    Lead Engineer: Gary Edward Gaines, Jr.
+
+    Focus: ML Ops, Defensive Engineering, NLP
+
+    Location: Philadelphia, PA / Southern NJ Area
+
+    Host_Machine: rosencrantz
